@@ -37,6 +37,14 @@ func NewSqlite(ctx context.Context, dsn string) (*Sqlite, error) {
 	if err != nil {
 		return nil, fmt.Errorf("NewSqlite create table: %w", err)
 	}
+	_, err = s.db.ExecContext(ctx, sqliteIndexTS)
+	if err != nil {
+		return nil, fmt.Errorf("NewSqlite create index ts: %w", err)
+	}
+	_, err = s.db.ExecContext(ctx, sqliteIndexProject)
+	if err != nil {
+		return nil, fmt.Errorf("NewSqlite create index project: %w", err)
+	}
 
 	s.latestTS, err = s.db.PrepareContext(ctx, sqliteLatestTimestamp)
 	if err != nil {
@@ -133,27 +141,29 @@ CREATE TABLE IF NOT EXISTS goindex (
         semver          INTEGER,
         major           INTEGER,
         minor           INTEGER,
-        patch           INTEGER,
-);
-CREATE INDEX IF NOT EXISTS goindex_ts ON goindex (timestamp);
-CREATE INDEX IF NOT EXISTS goindex_project ON goindex (project, semver);
+        patch           INTEGER
+)
 `
+	sqliteIndexTS = `
+CREATE INDEX IF NOT EXISTS goindex_ts ON goindex (timestamp)`
+	sqliteIndexProject = `
+CREATE INDEX IF NOT EXISTS goindex_project ON goindex (project, semver)`
 	sqliteLatestTimestamp = `
 SELECT timestamp
 FROM goindex
 ORDER BY timestamp DESC
-LIMIT 1;
+LIMIT 1
 `
 
 	sqliteAddVersion = `
 INSERT INTO goindex (timestamp, project, module, version, semver, major, minor, patch)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 	sqliteAllVersions = `
 SELECT module, version
 FROM goindex
 WHERE project = ? AND semver = ?
-ORDER BY major, minor, patch, version;
+ORDER BY major, minor, patch, version
 `
 )
