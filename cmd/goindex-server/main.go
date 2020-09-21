@@ -20,7 +20,7 @@ import (
 
 var (
 	exampleSQLiteDSN = `file:test.db?cache=shared&mode=memory`
-	IndexURL         = "ttps://index.golang.org/index"
+	IndexURL         = "https://index.golang.org/index"
 )
 
 func main() {
