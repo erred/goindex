@@ -106,7 +106,7 @@ func (s *Server) background(ctx context.Context) {
 func (s *Server) updateIndex(ctx context.Context) error {
 	ts, err := s.sqlite.LatestTS(ctx)
 	if err != nil {
-		return fmt.Errorf("updateIndex: %w", err)
+		s.log.Warn().Err(err).Msg("updateIndex get ts")
 	}
 	prev := 2000
 	for prev == 2000 {
