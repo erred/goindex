@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package stream;
+
+option go_package = "go.seankhliao.com/goindex";
+
+service Goindex {
+  rpc Versions(VersionsRequest) returns (ProjectVersions) {};
+}
+
+message VersionsRequest {
+  string project = 1;
+  bool semver = 2;
+}
+
+message IndexRecord {
+  string path = 1;
+  string version = 2;
+  string timestamp = 3;
+}
+
+message ProjectVersions {
+  string project = 1;
+  repeated IndexRecord versions = 2;
+}
