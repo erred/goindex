@@ -64,19 +64,16 @@ func NewSqlite(ctx context.Context, dsn string) (*Sqlite, error) {
 
 func (s *Sqlite) LatestTS(ctx context.Context) (string, error) {
 	row := s.latestTS.QueryRowContext(ctx)
-	err := row.Err()
+
+	var ts sql.NullString
+	err := row.Scan(&ts)
 	if errors.Is(err, sql.ErrNoRows) {
 		return "", nil
 	} else if err != nil {
 		return "", fmt.Errorf("LatestTS query: %w", err)
 	}
 
-	var ts string
-	err = row.Scan(&ts)
-	if err != nil {
-		return "", fmt.Errorf("LatestTS scan: %w", err)
-	}
-	return ts, nil
+	return ts.String, nil
 }
 
 func (s *Sqlite) AddVersion(ctx context.Context, ir *goindex.IndexRecord) error {
@@ -116,12 +113,25 @@ func (s *Sqlite) AllVersions(ctx context.Context, project string, semver bool) (
 
 	var irs []*goindex.IndexRecord
 	for rows.Next() {
-		var ir goindex.IndexRecord
-		err = rows.Scan(&ir.Path, &ir.Version)
+		err := rows.Err()
+		if errors.Is(err, sql.ErrNoRows) {
+			break
+		} else if err != nil {
+			return nil, fmt.Errorf("AllVersions rows: %w", err)
+		}
+		var spath, svers sql.NullString
+		err = rows.Scan(&spath, &svers)
 		if err != nil {
 			return nil, fmt.Errorf("AllVersions scan: %w", err)
 		}
-		irs = append(irs, &ir)
+		irs = append(irs, &goindex.IndexRecord{
+			Path:    spath.String,
+			Version: svers.String,
+		})
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("AllVersions rows: %w", err)
 	}
 
 	pv := &goindex.ProjectVersions{

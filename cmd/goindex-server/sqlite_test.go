@@ -7,7 +7,6 @@ import (
 
 func TestCreateTable(t *testing.T) {
 	td := t.TempDir()
-
 	dsn := "file:" + td + "/TestCreateTable.db"
 
 	_, err := NewSqlite(context.Background(), dsn)
