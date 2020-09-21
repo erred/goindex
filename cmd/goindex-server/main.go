@@ -44,6 +44,8 @@ func main() {
 		metric.WithDescription("total requests"),
 	)
 
+	go s.background(ctx)
+
 	_, grpcServer, run, err := srvc.Server(nil)
 	if err != nil {
 		s.log.Fatal().Err(err).Msg("setup server")
